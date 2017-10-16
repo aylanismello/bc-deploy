@@ -1,0 +1,10 @@
+- name: install python and cryptography dependencies
+  apt: name={{ item }} state=present
+  with_items:
+    - python-pip
+    - python-virtualenv
+    - build-essential
+    - libssl-dev
+    - libffi-dev
+    - python-dev
+  become: True

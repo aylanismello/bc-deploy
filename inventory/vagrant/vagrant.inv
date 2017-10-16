@@ -1,0 +1,6 @@
+[redis]
+52.53.251.216
+
+[redis:vars]
+ansible_ssh_private_key_file=~/.ssh/macbook-spark.pem
+ansible_user=ubuntu

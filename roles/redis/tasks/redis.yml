@@ -1,0 +1,86 @@
+- name: download redis binary
+  get_url:
+    url: http://download.redis.io/redis-stable.tar.gz
+    dest: "{{ home_directory }}/redis-stable.tar.gz"
+    mode: 444
+
+- name: create directory for redis source
+  file:
+    path: "{{ home_directory }}/redis-stable"
+    state: directory
+
+- name: unzip redis binary
+  shell: tar xzvf redis-stable.tar.gz
+  args:
+    executable: /bin/bash
+    chdir: "{{ home_directory }}"
+
+- name: compile redis source
+  make:
+    chdir: "{{ home_directory }}/redis-stable"
+
+# commenting out because it takes forever
+# uncomment if redis is not building correctly
+# - name: test redis source
+#   make:
+#     chdir: "{{ home_directory }}/redis-stable"
+#     target: test
+
+- name: install redis source
+  make:
+    chdir: "{{ home_directory }}/redis-stable"
+    target: install
+  become: True
+
+- name: create redis config directory
+  file:
+    path: /etc/redis
+    state: directory
+  become: True
+
+- name: copy config over
+  copy:
+    src: redis.conf
+    dest: /etc/redis/redis.conf
+  become: True
+
+- name: copy systemd service config
+  copy:
+    src: redis.service
+    dest: /etc/systemd/system/redis.service
+  become: True
+
+- name: create redis group
+  group:
+    name: redis
+    state: present
+  become: True
+
+- name: create redis user
+  user:
+    name: redis
+    group: redis
+    createhome: no
+    system: yes
+  become: True
+
+- name: create redis db directory
+  file:
+    path: /var/lib/redis
+    state: directory
+  become: True
+
+- name: chown redis directory
+  shell: chown redis:redis /var/lib/redis
+  become: True
+
+- name: chmod redis directory
+  shell: chmod 770 /var/lib/redis
+  become: True
+
+- name: ensure redis is running
+  systemd:
+    name: redis
+    state: started
+    daemon_reload: yes
+  become: True
